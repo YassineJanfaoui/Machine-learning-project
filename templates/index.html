@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Model Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Healthcare Model Prediction</h1>
+            <p>Predict medical costs using machine learning models</p>
+        </div>
+
+        <div class="form-container">
+            <form id="predictionForm" action="/predict" method="post">
+                <div class="form-group">
+                    <label for="model">Model Type <span class="tooltip">?
+                            <span class="tooltip-text">Select the machine learning model to use</span>
+                        </span></label>
+                    <select id="model" name="model" required>
+                        <option value="">Select a model</option>
+                        <option value="clustering">Clustering</option>
+                        <option value="classification">Classification</option>
+                        <option value="anomaly">Anomaly Detection</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="age">Age <span class="tooltip">?
+                            <span class="tooltip-text">Age of the primary beneficiary</span>
+                        </span></label>
+                    <input type="number" id="age" name="age" placeholder="Enter age (e.g., 25)" required min="18"
+                        max="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="sex">Sex <span class="tooltip">?
+                            <span class="tooltip-text">Gender of the beneficiary (0=Female, 1=Male)</span>
+                        </span></label>
+                    <select id="sex" name="sex" required>
+                        <option value="">Select gender</option>
+                        <option value="0">Female</option>
+                        <option value="1">Male</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bmi">BMI <span class="tooltip">?
+                            <span class="tooltip-text">Body Mass Index (e.g., 22.5)</span>
+                        </span></label>
+                    <input type="number" id="bmi" name="bmi" placeholder="Enter BMI" required step="0.1" min="10"
+                        max="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="children">Children <span class="tooltip">?
+                            <span class="tooltip-text">Number of children/dependents covered</span>
+                        </span></label>
+                    <input type="number" id="children" name="children" placeholder="Number of children" required min="0"
+                        max="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="smoker">Smoker <span class="tooltip">?
+                            <span class="tooltip-text">Whether the beneficiary is a smoker</span>
+                        </span></label>
+                    <select id="smoker" name="smoker" required>
+                        <option value="">Select smoking status</option>
+                        <option value="0">Non-smoker</option>
+                        <option value="1">Smoker</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="region">Region <span class="tooltip">?
+                            <span class="tooltip-text">Geographic region (0-3)</span>
+                        </span></label>
+                    <select id="region" name="region" required>
+                        <option value="">Select region</option>
+                        <option value="0">NorthEast</option>
+                        <option value="1">NorthWest</option>
+                        <option value="2">SouthEast</option>
+                        <option value="3">SouthWest</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="chargesGroup">
+                    <label for="charges">Charges <span class="tooltip">?
+                            <span class="tooltip-text">Medical costs in USD</span>
+                        </span></label>
+                    <input type="number" id="charges" name="charges" placeholder="Enter medical charges" step="0.01"
+                        min="0">
+                </div>
+
+                <button type="submit" class="btn">Get Prediction</button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your prediction...</p>
+            </div>
+
+            <div class="prediction-result" id="predictionResult">
+                {% if prediction_text %}
+                <h2>{{ prediction_text }}</h2>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', function (e) {
+            const loading = document.getElementById('loading');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const modelSelect = document.getElementById('model');
+            const chargesInput = document.getElementById('charges');
+
+            // If classification model is selected, clear and disable charges field
+            if (modelSelect.value === 'classification') {
+                chargesInput.value = '';
+                chargesInput.disabled = true;
+            } else {
+                chargesInput.disabled = false;
+            }
+
+            // Show loading animation
+            loading.classList.add('show');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+        });
+
+        // Show prediction result if it exists
+        const predictionResult = document.getElementById('predictionResult');
+        const predictionText = predictionResult.querySelector('h2');
+
+        if (predictionText && predictionText.textContent.trim() !== '') {
+            predictionResult.classList.add('show');
+        }
+
+        // Input validation
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('blur', function () {
+                const min = parseFloat(this.min);
+                const max = parseFloat(this.max);
+                const value = parseFloat(this.value);
+
+                if (value < min) {
+                    this.value = min;
+                } else if (value > max) {
+                    this.value = max;
+                }
+            });
+        });
+
+        // Toggle charges field based on model selection
+        const modelSelect = document.getElementById('model');
+        const chargesGroup = document.getElementById('chargesGroup');
+        const chargesInput = document.getElementById('charges');
+
+        function toggleChargesField() {
+            const selectedModel = modelSelect.value;
+            
+            if (selectedModel === 'classification') {
+                chargesGroup.style.display = 'none';
+                chargesInput.required = false;
+                chargesInput.value = ''; // clear value
+            } else {
+                chargesGroup.style.display = 'block';
+                chargesInput.required = true;
+            }
+        }
+
+        modelSelect.addEventListener('change', toggleChargesField);
+
+        // Initial call on page load
+        toggleChargesField();
+    </script>
+</body>
+</html>
