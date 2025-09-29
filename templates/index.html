@@ -24,7 +24,7 @@
                     <select id="model" name="model" required>
                         <option value="">Select a model</option>
                         <option value="clustering">Clustering</option>
-                        <option value="classification">Classification</option>
+                        <option value="regression">Regression</option>
                         <option value="anomaly">Anomaly Detection</option>
                     </select>
                 </div>
@@ -119,7 +119,7 @@
             const chargesInput = document.getElementById('charges');
 
             // If classification model is selected, clear and disable charges field
-            if (modelSelect.value === 'classification') {
+            if (modelSelect.value === 'regression') {
                 chargesInput.value = '';
                 chargesInput.disabled = true;
             } else {
@@ -163,7 +163,7 @@
         function toggleChargesField() {
             const selectedModel = modelSelect.value;
             
-            if (selectedModel === 'classification') {
+            if (selectedModel === 'regression') {
                 chargesGroup.style.display = 'none';
                 chargesInput.required = false;
                 chargesInput.value = ''; // clear value
@@ -175,7 +175,6 @@
 
         modelSelect.addEventListener('change', toggleChargesField);
 
-        // Initial call on page load
         toggleChargesField();
     </script>
 </body>
